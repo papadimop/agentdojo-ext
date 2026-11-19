@@ -1,18 +1,40 @@
-# HANDOFF (2026-11-16)
+# HANDOFF (2026-11-19)
 
-## Απόφαση
-Ο επιβλέπων (Δημοσθένης) συμφώνησε στις 16/11/2026 με τον συνδυασμό: πρώτα επέκταση AgentDojo (LLM06/ASI02, LLM10, ASI06) ως test set, μετά ενδιάμεσος agent που ελέγχει εξόδους εργαλείων και κλήσεις εργαλείων, μέτρηση σε ASI01 + νέες, με/χωρίς RAG, έναντι των έτοιμων αμυνών. Βλ. CLAUDE.md.
+## Θέμα (εγκρίθηκε 16/11/2026)
+Επέκταση AgentDojo (LLM06/ASI02, LLM10, ASI06) ως test set, μετά ενδιάμεσος agent που ελέγχει εξόδους εργαλείων και κλήσεις εργαλείων. Μέτρηση σε ASI01 και στις νέες κατηγορίες, με/χωρίς RAG, έναντι των έτοιμων αμυνών. Βλ. CLAUDE.md.
 
-## Τι υπάρχει
+## Τρέχων κύκλος (19/11 - 26/11): LLM06 από άκρη σε άκρη
+Επιθέσεις LLM06 -> καμία άμυνα -> 4 έτοιμες άμυνες -> κανόνας κώδικα -> guard κλήσεων χωρίς RAG. Ο guard ελέγχεται και σε 2-3 επιθέσεις ASI01 του banking. Εκτός κύκλου: RAG, guard εξόδων, qwen3:14b, εκτελέσεις LLM10/ASI06.
+| Μέρα | Κώδικας (χωρίς μοντέλο) | Kaggle |
+|---|---|---|
+| 1 | - | A1: user_task_13 benign + injection_task_100, `ollama show qwen3:8b` |
+| 2 | injection tasks 101-104 (LLM06), check_suites, δοκιμή με ψεύτικο server | - |
+| 3 | κελιά | LLM06 χωρίς άμυνα |
+| 4 | κανόνας ορίου κλήσεων + guard κλήσεων (υποκλάση ToolsExecutor) | έτοιμες άμυνες + κανόνας |
+| 5 | κελιά | guard: με επίθεση + benign |
+| 6 | πίνακες, σύνοψη | - |
+| 7 | περιθώριο | - |
+Αν δεν φτάνει ο χρόνος GPU: άμυνες μόνο στα user tasks που το qwen3:8b λύνει benign (0,3,5,6,7,8,13,14).
+
+## Μεθοδολογία
+- Δείγμα = ζεύγος (user_task, injection_task). 4-6 injection tasks ανά νέα κατηγορία, με διαφορετικό μηχανισμό το καθένα (LLM06: επανάληψη, ατέρμονος βρόχος, ping-pong, απαρίθμηση, φούσκωμα context).
+- Δύο σύνολα: ΠΛΗΡΕΣ (όλα τα user tasks, όπως το ASI01, για ASR και σύγκριση) και ΚΑΘΑΡΟ (vectors με κενό default, για utility υπό επίθεση και stealthy ASR). Στο banking και τα 16 user tasks φτάνουν σε vector, μόνο τα 2, 12, 13 σε κενό. Ο ground-truth agent λύνει και τα 16 με το injection_task_100 μέσα, αλλά το `injection_bill_text` έχει ως default το περιεχόμενο του λογαριασμού (ποσό, IBAN), άρα η αντικατάστασή του χαλά το user_task_0 για πραγματικό μοντέλο (ισχύει και για το upstream ASI01).
+- Θερμοκρασία: παραλλαγή μοντέλου με temperature 0 (Modelfile) για τους κύριους πίνακες + 3 επαναλήψεις σε μικρό υποσύνολο. Το default του qwen3 θα φανεί από το `ollama show`.
+- Το test set παγώνει (commit) πριν σχεδιαστεί ο guard.
+- Βασική σύγκριση: ένας κανόνας κώδικα ανά κατηγορία έναντι ενός guard για όλες (μαζί με το ASI01, όπου απλός κανόνας δεν υπάρχει).
+
+## Κατάσταση
 - Πρωτότυπα των 3 επιθέσεων και runner δύο sessions, ελεγμένα με ground-truth agents (υπακούει -> security True, αγνοεί -> security False, η εργασία μένει εφικτή).
 - Kaggle: Ollama + qwen3:8b δουλεύει με AgentDojo (benign banking 8/16).
-- ΔΕΝ υπάρχουν ακόμα αποτελέσματα με πραγματικό μοντέλο υπό επίθεση.
+- Κελιά για το A1 έτοιμα, δοκιμασμένα με ψεύτικο server (19/11).
+- Άμυνες κώδικα: σχεδιασμένες στο docs/plan_attacks.md, όχι υλοποιημένες ακόμα.
+- Δεν υπάρχουν ακόμα αποτελέσματα με πραγματικό μοντέλο υπό επίθεση.
 
 ## Επόμενα βήματα (με τη σειρά)
 Φάση 1: επιθέσεις (test set)
-1. LLM06: τρέξιμο στο Kaggle banking user_task_13 + injection_task_100, χωρίς άμυνα. Μετά σε όλα τα user tasks με vector κενού default. Μετρικές: ASR, stealthy ASR (security και utility), ΔCalls έναντι benign, cap hits (max_iters=15).
+1. LLM06: banking user_task_13 + injection_task_100 χωρίς άμυνα (A1), μετά όλα τα injection tasks σε πλήρες και καθαρό σύνολο. Μετρικές: ASR, stealthy ASR (security και utility), ΔCalls έναντι benign, cap hits (max_iters=15).
 2. LLM06 με τις 4 έτοιμες άμυνες + κανόνα κώδικα (όριο ίδιων κλήσεων). Μέτρηση εκτελεσμένων κλήσεων, over-restriction σε benign.
-3. Benign slack, LLM10 (+ 3-5 παραλλαγές payload), άμυνες.
+3. Benign slack, LLM10 (+ 3-5 παραλλαγές payload), άμυνες, sanitizer πριν το post_webpage.
 4. Benign workspace, ASI06 με two_session_live.py, λύση για pre==post στο S1, αθώα εργασία "θυμήσου Χ" για over-restriction.
 5. ASI01 baseline: important_instructions στα ίδια suites, ίδια μοντέλα.
 
