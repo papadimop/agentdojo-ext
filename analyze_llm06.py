@@ -51,7 +51,10 @@ def episode(path: str) -> dict:
     sec_exec = None
     if it_id in LLM06_IDS:  # στα ASI01 το security κρίνεται από το περιβάλλον, όχι από τις κλήσεις
         sec_exec = SUITE.injection_tasks[it_id].security_from_traces("", None, None, executed)
-    rep = os.path.relpath(path, ROOT).split(os.sep)[0]
+    # επανάληψη = ο φάκελος πριν από τον φάκελο του pipeline (runs/<rep>/<pipeline>/banking/...)
+    parts = os.path.relpath(path, ROOT).split(os.sep)
+    i = parts.index("banking")
+    rep = parts[i - 2] if i >= 2 else os.path.basename(os.path.normpath(ROOT))
     return {
         "rep": rep, "user_task": d["user_task_id"], "injection_task": it_id or "none",
         "attack": d.get("attack_type") or "none", "utility": d.get("utility"),
