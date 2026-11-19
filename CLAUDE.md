@@ -35,6 +35,11 @@
 - Σημείο για guard στις εξόδους: υποκλάση `PromptInjectionDetector` (agent_pipeline/pi_detector.py) με `detect(tool_output)`. Σημείο πριν την κλήση: δεν υπάρχει hook, υποκλάση του `ToolsExecutor` (agent_pipeline/tool_execution.py) με έλεγχο πριν το `runtime.run_function`.
 - ΠΑΓΙΔΑ: το `security_from_traces` διαβάζει τις κλήσεις που ΖΗΤΗΣΕ το LLM, όχι όσες εκτελέστηκαν. Με άμυνα που μπλοκάρει, για το LLM06 μετράμε εκτελεσμένες κλήσεις.
 - ΠΑΓΙΔΑ: σφάλμα API/context στο benchmark γράφεται utility False, security True. Μετράμε και αναφέρουμε πόσα επεισόδια απέτυχαν από σφάλμα.
+- `VLLM_PARSED` παίρνει το ΠΡΩΤΟ μοντέλο του `/v1/models` (`_get_local_model_id`) και αγνοεί το `--model-id`. Στο Ollama να υπάρχει ένα μοντέλο όταν τρέχει το CLI. Agent + guard με δύο μοντέλα: μόνο από Python με ρητό όνομα μοντέλου.
+- Θερμοκρασία: `openai_llm.py` στέλνει `temperature or NOT_GIVEN`, άρα το 0.0 ΔΕΝ στέλνεται και ισχύει το default του Ollama/μοντέλου (μη ντετερμινιστικό).
+- Το CLI με `--attack` τρέχει επιπλέον το injection task ως user task (`<suite>/injection_task_X/none/none.json`).
+- Logs: `<logdir>/vllm_parsed/<suite>/<user_task>/<attack>/<injection_task>.json`. Ζητηθείσες κλήσεις: `tool_calls` των assistant μηνυμάτων. Εκτελεσμένες: μηνύματα `role=tool` (πεδίο `tool_call`, `error`). Για JSON από Python χρειάζεται `OutputLogger(logdir)` γύρω από το τρέξιμο.
+- Banking: και τα 16 user tasks φτάνουν σε injection vector. Κενό default μόνο σε `injection_address_change`, `injection_landloard_notice` (user tasks 2, 12, 13). Το `injection_bill_text` έχει ως default το περιεχόμενο του λογαριασμού.
 - Upstream: workspace injection_task_6-13 αποτυγχάνουν στο δικό τους check_suites.
 
 ## Αρχεία
