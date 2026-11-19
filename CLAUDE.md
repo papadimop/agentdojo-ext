@@ -38,13 +38,17 @@
 - `VLLM_PARSED` παίρνει το ΠΡΩΤΟ μοντέλο του `/v1/models` (`_get_local_model_id`) και αγνοεί το `--model-id`. Στο Ollama να υπάρχει ένα μοντέλο όταν τρέχει το CLI. Agent + guard με δύο μοντέλα: μόνο από Python με ρητό όνομα μοντέλου.
 - Θερμοκρασία: `openai_llm.py` στέλνει `temperature or NOT_GIVEN`, άρα το 0.0 ΔΕΝ στέλνεται και ισχύει το default του Ollama/μοντέλου (μη ντετερμινιστικό).
 - qwen3:8b (Ollama, Q4_K_M) defaults: temperature 0.6, top_p 0.95, top_k 20, thinking ενεργό. ~10 GB στη GPU με context 32768.
+- Qwen3 thinking mode: όχι greedy/temperature 0 (README QwenLM/Qwen3: «endless repetitions»). Κρατάμε defaults, επαναλήψεις αντί για temp 0.
+- Cap hit (max_iters=15): το τελευταίο μήνυμα είναι assistant με tool_calls που δεν εκτελέστηκαν (16 ζητηθείσες, 15 εκτελεσμένες).
+- Το CLI δέχεται πολλά `-ut` / `-it` (επαναλαμβανόμενα flags). Δεν ξανατρέχει επεισόδια που υπάρχουν ήδη στο logdir (χωρίς `-f`).
 - Το CLI με `--attack` τρέχει επιπλέον το injection task ως user task (`<suite>/injection_task_X/none/none.json`).
 - Logs: `<logdir>/vllm_parsed/<suite>/<user_task>/<attack>/<injection_task>.json`. Ζητηθείσες κλήσεις: `tool_calls` των assistant μηνυμάτων. Εκτελεσμένες: μηνύματα `role=tool` (πεδίο `tool_call`, `error`). Για JSON από Python χρειάζεται `OutputLogger(logdir)` γύρω από το τρέξιμο.
 - Banking: και τα 16 user tasks φτάνουν σε injection vector. Κενό default μόνο σε `injection_address_change`, `injection_landloard_notice` (user tasks 2, 12, 13). Το `injection_bill_text` έχει ως default το περιεχόμενο του λογαριασμού.
 - Upstream: workspace injection_task_6-13 αποτυγχάνουν στο δικό τους check_suites.
 
 ## Αρχεία
-- ext_llm06.py, ext_llm10.py, ext_asi06.py: οι επιθέσεις (ελεγμένες χωρίς μοντέλο).
+- ext_llm06.py, ext_llm10.py, ext_asi06.py: οι επιθέσεις (ελεγμένες χωρίς μοντέλο). ext_llm06: injection tasks 100-103.
+- analyze_llm06.py: πίνακας ASR/stealthy/utility/ΔCalls/cap hits/σφάλματα από τα logs (`PYTHONPATH=. python analyze_llm06.py <runs_root> [out.csv]`).
 - two_session_live.py: runner δύο sessions για ASI06 με πραγματικό μοντέλο. two_session_sim.py, e2e.py: έλεγχοι χωρίς μοντέλο.
 - HANDOFF.md: κατάσταση και επόμενα βήματα.
 - docs/: η έρευνα που έχει γίνει. kaggle_setup.md (δοκιμασμένα κελιά Kaggle), owasp_coverage.md (κάλυψη OWASP ανά κατηγορία), owasp_gaps_verification.md, plan_attacks.md (σχέδιο των 3 επιθέσεων με papers-οδηγούς), intermediate_agent_research.md (θέσεις του ενδιάμεσου agent στο pipeline, ATLAS, σχετικά papers). Διάβασέ τα όταν χρειάζεσαι λεπτομέρειες.
