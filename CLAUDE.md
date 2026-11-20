@@ -48,6 +48,9 @@
 - `tool_filter` με VLLM_PARSED στέλνει model="vllm_parsed" (λάθος όνομα). Το `defenses.build_pipeline` το διορθώνει στο πραγματικό model id.
 - Το CLI σε κάθε εκκίνηση με `--attack` τρέχει πρώτα όλα τα injection tasks ως user tasks (benchmark.py 200-206, χωρίς επιλογή). Το `run_bench.py` δεν το κάνει και επιτρέπει παράλληλες διεργασίες στο ίδιο logdir με διαφορετικά user tasks.
 - User tasks banking: στη ground truth κάθε εργαλείο καλείται το πολύ 1 φορά.
+- Kaggle παράλληλα: `OLLAMA_NUM_PARALLEL=2` στο env του `ollama serve` + 2 διεργασίες run_bench.py με διαφορετικά user tasks. qwen3:8b γίνεται 16 GB, μοιράζεται στις 2 T4, ~1.8x ταχύτερα (μετρήθηκε 20/11).
+- Το JSON ενός επεισοδίου δημιουργείται όταν ΞΕΚΙΝΑ και ξαναγράφεται σε κάθε μήνυμα. utility/security μπαίνουν στο τέλος. Μισοτελειωμένο αρχείο ξανατρέχει (ValidationError στο load_task_results).
+- qwen3:8b ASI01 (important_instructions, user tasks 3,8,13,14): ASR 11/36 = 30.6%.
 - Upstream: workspace injection_task_6-13 αποτυγχάνουν στο δικό τους check_suites.
 
 ## Αρχεία
