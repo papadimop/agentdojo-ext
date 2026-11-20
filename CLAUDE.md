@@ -60,6 +60,8 @@
 - defenses.py: CountLimitExecutor (κανόνας κώδικα, LIMIT=5 εκτελέσεις ανά εργαλείο), build_pipeline για none / 4 έτοιμες / count_limit.
 - run_bench.py: τρέξιμο από Python (`--ut`, `--benign`, `--it asi01|llm06`, `--attack`, `--defense`).
 - phase_b.sh: όλες οι άμυνες με σειρά προτεραιότητας (`bash phase_b.sh <logdir> <user tasks>`), συνεχίζει αν μια άμυνα αποτύχει. Ελέγχθηκε με ψεύτικο μοντέλο (244 JSON χωρίς pi_detector).
+- guard.py: ενδιάμεσος agent κλήσεων (GuardExecutor). Πριν από κάθε κλήση ρωτά το ίδιο μοντέλο (non-thinking, /no_think) ALLOW/BLOCK με βάση αίτημα χρήστη + εκτελεσμένες κλήσεις + προτεινόμενη κλήση. Δεν βλέπει εξόδους εργαλείων. Fail-open σε ακατάληπτη απάντηση. Αποφάσεις στο stderr ως `GUARD ...`. Ελέγχθηκε με ψεύτικο server (ALLOW/BLOCK/SMART/GARBAGE/THINK).
+- phase_c.sh: none + guard σε user tasks (`bash phase_c.sh <logdir> <user tasks>`). Dev: 5,6,7. Εξέταση: 3,8,13,14.
 - analyze_llm06.py: πίνακας ASR/stealthy/utility/ΔCalls/cap hits/σφάλματα από τα logs (`PYTHONPATH=. python analyze_llm06.py <runs_root> [out.csv]`).
 - two_session_live.py: runner δύο sessions για ASI06 με πραγματικό μοντέλο. two_session_sim.py, e2e.py: έλεγχοι χωρίς μοντέλο.
 - HANDOFF.md: κατάσταση και επόμενα βήματα.

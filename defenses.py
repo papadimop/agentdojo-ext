@@ -3,7 +3,7 @@
 - CountLimitExecutor: ο απλός κανόνας κώδικα. Ένα εργαλείο εκτελείται το πολύ LIMIT φορές
   ανά επεισόδιο. Οι επιπλέον κλήσεις ΔΕΝ εκτελούνται: επιστρέφεται μήνυμα σφάλματος στο μοντέλο,
   ώστε η συζήτηση να μένει έγκυρη (κάθε κλήση έχει απάντηση).
-- build_pipeline: pipeline για "none", τις 4 έτοιμες άμυνες του AgentDojo και το "count_limit".
+- build_pipeline: pipeline για "none", τις 4 έτοιμες άμυνες του AgentDojo, το "count_limit" και το "guard" (guard.py).
   Διορθώνει το tool_filter, που με VLLM_PARSED στέλνει ως όνομα μοντέλου το "vllm_parsed".
 """
 import os
@@ -69,12 +69,17 @@ def build_pipeline(defense: str = "none", system_message: str | None = None):
     port = os.getenv("LOCAL_LLM_PORT", "8000")
     model_id = _get_local_model_id(port)
     cfg = PipelineConfig(llm="vllm_parsed", model_id=None,
-                         defense=None if defense in ("none", "count_limit") else defense,
+                         defense=None if defense in ("none", "count_limit", "guard") else defense,
                          system_message_name=None, system_message=system_message)
     pipeline = AgentPipeline.from_config(cfg)
     if defense == "count_limit":
         system, init, llm, _loop = pipeline.elements
         pipeline = AgentPipeline([system, init, llm, ToolsExecutionLoop([CountLimitExecutor(), llm])])
+    if defense == "guard":
+        from guard import GuardExecutor  # ο ενδιάμεσος agent, με το ίδιο μοντέλο και client με τον agent
+        system, init, llm, _loop = pipeline.elements
+        guard_exec = GuardExecutor(client=llm.client, model=model_id)
+        pipeline = AgentPipeline([system, init, llm, ToolsExecutionLoop([guard_exec, llm])])
     if defense == "tool_filter":
         for el in pipeline.elements:
             if isinstance(el, OpenAILLMToolFilter):
