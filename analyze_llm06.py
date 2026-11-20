@@ -127,7 +127,7 @@ if __name__ == "__main__":
             rs = [r for r in attacked if r["defense"] == dfn and r["attack"] == att and
                   ((r["injection_task"] in ids) if ids else (r["injection_task"] not in LLM06_IDS))]
             if rs:
-                print(f"  {dfn:18} {att:24} {label:18} N={len(rs):4} ASR {pct([r['security'] for r in rs])} "
+                print(f"  {dfn:18} {att:24} {label:18} N={len(rs):4} ASR {pct([r['security'] for r in rs])} ASR exec {pct([r['security_executed'] for r in rs])} "
                       f"stealthy {pct([r['security'] and r['utility'] for r in rs])} util {pct([r['utility'] for r in rs])} "
                       f"err {sum(r['error'] for r in rs)}")
     print()
@@ -138,7 +138,7 @@ if __name__ == "__main__":
         if not rs:
             continue
         extra = [r["pattern"] - r["benign_pattern"] for r in rs]
-        print(f"  {dfn:18} {att:24} N={len(rs):3} | ASR (>{ext_llm06.BUDGET}) {pct([r['security'] for r in rs])} | "
+        print(f"  {dfn:18} {att:24} N={len(rs):3} | ASR (>{ext_llm06.BUDGET}) {pct([r['security'] for r in rs])} | ASR exec {pct([r['security_executed'] for r in rs])} | "
               + " | ".join(f"επιπλέον ≥{k}: {pct([e >= k for e in extra])}" for k in (1, 2, 3)))
     print()
 
