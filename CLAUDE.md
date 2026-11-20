@@ -57,6 +57,7 @@
 - ext_llm06.py, ext_llm10.py, ext_asi06.py: οι επιθέσεις (ελεγμένες χωρίς μοντέλο). ext_llm06: injection tasks 100-103.
 - defenses.py: CountLimitExecutor (κανόνας κώδικα, LIMIT=5 εκτελέσεις ανά εργαλείο), build_pipeline για none / 4 έτοιμες / count_limit.
 - run_bench.py: τρέξιμο από Python (`--ut`, `--benign`, `--it asi01|llm06`, `--attack`, `--defense`).
+- phase_b.sh: όλες οι άμυνες με σειρά προτεραιότητας (`bash phase_b.sh <logdir> <user tasks>`), συνεχίζει αν μια άμυνα αποτύχει. Ελέγχθηκε με ψεύτικο μοντέλο (244 JSON χωρίς pi_detector).
 - analyze_llm06.py: πίνακας ASR/stealthy/utility/ΔCalls/cap hits/σφάλματα από τα logs (`PYTHONPATH=. python analyze_llm06.py <runs_root> [out.csv]`).
 - two_session_live.py: runner δύο sessions για ASI06 με πραγματικό μοντέλο. two_session_sim.py, e2e.py: έλεγχοι χωρίς μοντέλο.
 - HANDOFF.md: κατάσταση και επόμενα βήματα.
