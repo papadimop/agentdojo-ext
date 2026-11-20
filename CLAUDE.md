@@ -51,6 +51,8 @@
 - Kaggle παράλληλα: `OLLAMA_NUM_PARALLEL=2` στο env του `ollama serve` + 2 διεργασίες run_bench.py με διαφορετικά user tasks. qwen3:8b γίνεται 16 GB, μοιράζεται στις 2 T4, ~1.8x ταχύτερα (μετρήθηκε 20/11).
 - Το JSON ενός επεισοδίου δημιουργείται όταν ΞΕΚΙΝΑ και ξαναγράφεται σε κάθε μήνυμα. utility/security μπαίνουν στο τέλος. Μισοτελειωμένο αρχείο ξανατρέχει (ValidationError στο load_task_results).
 - qwen3:8b ASI01 (important_instructions, user tasks 3,8,13,14): ASR 11/36 = 30.6%.
+- Φάση Β (qwen3:8b, user tasks 3,8,13,14): repeat_user_prompt ASI01 ASR 0/36 με utility 97%. pi_detector, tool_filter ASR 0% με utility ~61-67%. spotlighting χωρίς ουσιαστική επίδραση (10/36). Πλήρης πίνακας στο HANDOFF.
+- Kaggle Save Version (Save & Run All, GPU for this session) τρέχει το notebook στο παρασκήνιο. Output + Logs στη σελίδα του notebook. Το interactive session σταματά χωριστά (Stop Session).
 - Upstream: workspace injection_task_6-13 αποτυγχάνουν στο δικό τους check_suites.
 
 ## Αρχεία
@@ -61,4 +63,5 @@
 - analyze_llm06.py: πίνακας ASR/stealthy/utility/ΔCalls/cap hits/σφάλματα από τα logs (`PYTHONPATH=. python analyze_llm06.py <runs_root> [out.csv]`).
 - two_session_live.py: runner δύο sessions για ASI06 με πραγματικό μοντέλο. two_session_sim.py, e2e.py: έλεγχοι χωρίς μοντέλο.
 - HANDOFF.md: κατάσταση και επόμενα βήματα.
+- docs/results_log.md: όλα τα πειράματα με τη σειρά, αριθμοί και νόημα (πηγή για παρουσιάσεις). Ενημερώνεται μετά από κάθε πείραμα.
 - docs/: η έρευνα που έχει γίνει. kaggle_setup.md (δοκιμασμένα κελιά Kaggle), owasp_coverage.md (κάλυψη OWASP ανά κατηγορία), owasp_gaps_verification.md, plan_attacks.md (σχέδιο των 3 επιθέσεων με papers-οδηγούς), intermediate_agent_research.md (θέσεις του ενδιάμεσου agent στο pipeline, ATLAS, σχετικά papers). Διάβασέ τα όταν χρειάζεσαι λεπτομέρειες.
