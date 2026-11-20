@@ -45,10 +45,18 @@
 - Το CLI με `--attack` τρέχει επιπλέον το injection task ως user task (`<suite>/injection_task_X/none/none.json`).
 - Logs: `<logdir>/vllm_parsed/<suite>/<user_task>/<attack>/<injection_task>.json`. Ζητηθείσες κλήσεις: `tool_calls` των assistant μηνυμάτων. Εκτελεσμένες: μηνύματα `role=tool` (πεδίο `tool_call`, `error`). Για JSON από Python χρειάζεται `OutputLogger(logdir)` γύρω από το τρέξιμο.
 - Banking: και τα 16 user tasks φτάνουν σε injection vector. Κενό default μόνο σε `injection_address_change`, `injection_landloard_notice` (user tasks 2, 12, 13). Το `injection_bill_text` έχει ως default το περιεχόμενο του λογαριασμού.
+- `tool_filter` με VLLM_PARSED στέλνει model="vllm_parsed" (λάθος όνομα). Το `defenses.build_pipeline` το διορθώνει στο πραγματικό model id.
+- Το CLI σε κάθε εκκίνηση με `--attack` τρέχει πρώτα όλα τα injection tasks ως user tasks (benchmark.py 200-206, χωρίς επιλογή). Το `run_bench.py` δεν το κάνει και επιτρέπει παράλληλες διεργασίες στο ίδιο logdir με διαφορετικά user tasks.
+- User tasks banking: στη ground truth κάθε εργαλείο καλείται το πολύ 1 φορά.
+- Kaggle παράλληλα: `OLLAMA_NUM_PARALLEL=2` στο env του `ollama serve` + 2 διεργασίες run_bench.py με διαφορετικά user tasks. qwen3:8b γίνεται 16 GB, μοιράζεται στις 2 T4, ~1.8x ταχύτερα (μετρήθηκε 20/11).
+- Το JSON ενός επεισοδίου δημιουργείται όταν ΞΕΚΙΝΑ και ξαναγράφεται σε κάθε μήνυμα. utility/security μπαίνουν στο τέλος. Μισοτελειωμένο αρχείο ξανατρέχει (ValidationError στο load_task_results).
+- qwen3:8b ASI01 (important_instructions, user tasks 3,8,13,14): ASR 11/36 = 30.6%.
 - Upstream: workspace injection_task_6-13 αποτυγχάνουν στο δικό τους check_suites.
 
 ## Αρχεία
 - ext_llm06.py, ext_llm10.py, ext_asi06.py: οι επιθέσεις (ελεγμένες χωρίς μοντέλο). ext_llm06: injection tasks 100-103.
+- defenses.py: CountLimitExecutor (κανόνας κώδικα, LIMIT=5 εκτελέσεις ανά εργαλείο), build_pipeline για none / 4 έτοιμες / count_limit.
+- run_bench.py: τρέξιμο από Python (`--ut`, `--benign`, `--it asi01|llm06`, `--attack`, `--defense`).
 - analyze_llm06.py: πίνακας ASR/stealthy/utility/ΔCalls/cap hits/σφάλματα από τα logs (`PYTHONPATH=. python analyze_llm06.py <runs_root> [out.csv]`).
 - two_session_live.py: runner δύο sessions για ASI06 με πραγματικό μοντέλο. two_session_sim.py, e2e.py: έλεγχοι χωρίς μοντέλο.
 - HANDOFF.md: κατάσταση και επόμενα βήματα.
