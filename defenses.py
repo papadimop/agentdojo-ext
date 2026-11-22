@@ -69,16 +69,17 @@ def build_pipeline(defense: str = "none", system_message: str | None = None):
     port = os.getenv("LOCAL_LLM_PORT", "8000")
     model_id = _get_local_model_id(port)
     cfg = PipelineConfig(llm="vllm_parsed", model_id=None,
-                         defense=None if defense in ("none", "count_limit", "guard") else defense,
+                         defense=None if defense in ("none", "count_limit", "guard", "guard2") else defense,
                          system_message_name=None, system_message=system_message)
     pipeline = AgentPipeline.from_config(cfg)
     if defense == "count_limit":
         system, init, llm, _loop = pipeline.elements
         pipeline = AgentPipeline([system, init, llm, ToolsExecutionLoop([CountLimitExecutor(), llm])])
-    if defense == "guard":
+    if defense in ("guard", "guard2"):
         from guard import GuardExecutor  # ο ενδιάμεσος agent, με το ίδιο μοντέλο και client με τον agent
         system, init, llm, _loop = pipeline.elements
-        guard_exec = GuardExecutor(client=llm.client, model=model_id)
+        guard_exec = GuardExecutor(client=llm.client, model=model_id, version=2 if defense == "guard2" else 1,
+                                   ollama_url=f"http://localhost:{port}")
         pipeline = AgentPipeline([system, init, llm, ToolsExecutionLoop([guard_exec, llm])])
     if defense == "tool_filter":
         for el in pipeline.elements:
