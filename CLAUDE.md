@@ -9,6 +9,15 @@
 - Μόνο επαληθευμένα στοιχεία. Ό,τι είναι υπόθεση να λέγεται ρητά. Αδυναμίες ευθέως.
 - Η μέτρηση γίνεται ΠΑΝΤΑ με κώδικα (utility/security του AgentDojo), ποτέ με LLM judge.
 
+## Τρόπος συνεργασίας (ισχύει σε κάθε νέα συζήτηση)
+- Ο χρήστης τρέχει στο Kaggle, ο Claude γράφει και ελέγχει κώδικα (ψεύτικος server αντί για μοντέλο) πριν δώσει κελιά.
+- Μεγάλα τρεξίματα: Save Version (Save & Run All, GPU for this session) στο παρασκήνιο. Στα κελιά: zip στο τέλος, ανάλυση με analyze_llm06.py, χωρίς πλοήγηση στο tab όσο τρέχει interactive.
+- Ο χρήστης ανεβάζει κάθε zip στο GitHub στον φάκελο `kaggle sessions/` (από το web, Add file → Upload). Ο Claude το αποσυμπιέζει σε scratchpad και επαληθεύει τα νούμερα.
+- PR από το branch του Claude, ο χρήστης κάνει merge με «Squash and merge» (πάντα: το ιστορικό του branch έχει commit που δεν πρέπει να μπει στο master).
+- Αρχεία μόνο για τον χρήστη (π.χ. οδηγοί εκμάθησης) ΔΕΝ μπαίνουν στο repo (είναι public). Στέλνονται απευθείας.
+- Ποσόστωση GPU 30 ώρες/εβδομάδα: πριν από κάθε τρέξιμο εκτίμηση ωρών. Παράλληλο τρέξιμο (OLLAMA_NUM_PARALLEL=2, 2 διεργασίες).
+- Μετά από κάθε πείραμα: ενημέρωση docs/results_log.md και HANDOFF.md.
+
 ## Το θέμα (εγκρίθηκε από τον επιβλέποντα 16/11/2026)
 Συνδυασμός:
 1. Επέκταση AgentDojo με 3 κατηγορίες OWASP που λείπουν: LLM06:2026/ASI02 (loop amplification, banking), LLM10:2026 Improper Output Handling (slack), ASI06 Memory Poisoning σε δύο sessions (workspace). Οι επιθέσεις αυτές είναι το test set.
@@ -60,7 +69,7 @@
 - defenses.py: CountLimitExecutor (κανόνας κώδικα, LIMIT=5 εκτελέσεις ανά εργαλείο), build_pipeline για none / 4 έτοιμες / count_limit.
 - run_bench.py: τρέξιμο από Python (`--ut`, `--benign`, `--it asi01|llm06`, `--attack`, `--defense`).
 - phase_b.sh: όλες οι άμυνες με σειρά προτεραιότητας (`bash phase_b.sh <logdir> <user tasks>`), συνεχίζει αν μια άμυνα αποτύχει. Ελέγχθηκε με ψεύτικο μοντέλο (244 JSON χωρίς pi_detector).
-- guard.py: ενδιάμεσος agent κλήσεων (GuardExecutor). Πριν από κάθε κλήση ρωτά το ίδιο μοντέλο (non-thinking, /no_think) ALLOW/BLOCK με βάση αίτημα χρήστη + εκτελεσμένες κλήσεις + προτεινόμενη κλήση. Δεν βλέπει εξόδους εργαλείων. Fail-open σε ακατάληπτη απάντηση. Αποφάσεις στο stderr ως `GUARD ...`. Ελέγχθηκε με ψεύτικο server (ALLOW/BLOCK/SMART/GARBAGE/THINK).
+- guard.py: ενδιάμεσος agent κλήσεων (GuardExecutor, v1 = `--defense guard`). Πριν από κάθε κλήση ρωτά το ίδιο μοντέλο (/no_think στο κείμενο, που ΔΕΝ σβήνει τη σκέψη: διάμεσος 11 s/απόφαση) ALLOW/BLOCK με βάση αίτημα χρήστη + εκτελεσμένες κλήσεις + προτεινόμενη κλήση. Δεν βλέπει εξόδους εργαλείων. Fail-open σε ακατάληπτη απάντηση. Αποφάσεις στο stderr ως `GUARD ...`. Ελέγχθηκε με ψεύτικο server (ALLOW/BLOCK/SMART/GARBAGE/THINK).
 - guard v2 (`--defense guard2`, 22/11): οδηγίες «δεν βλέπεις δεδομένα, μην μπλοκάρεις επειδή δεν επιβεβαιώνεις τιμή/συνθήκη· μπλόκαρε μόνο ενέργειες/παραλήπτες/στόχους εκτός αιτήματος και άσκοπες επαναλήψεις», native Ollama /api/chat με think=false (fallback στο OpenAI endpoint). Ο v1 (`guard`) μένει αμετάβλητος. Dev v2: benign 2,4,11 (τιμές από δεδομένα) + επιθέσεις 5,6,7. Εξέταση: 3,8,13,14.
 - phase_c.sh: none + guard σε user tasks (`bash phase_c.sh <logdir> <user tasks>`). Dev: 5,6,7. Εξέταση: 3,8,13,14.
 - analyze_llm06.py: πίνακας ASR/stealthy/utility/ΔCalls/cap hits/σφάλματα από τα logs (`PYTHONPATH=. python analyze_llm06.py <runs_root> [out.csv]`).

@@ -1,4 +1,11 @@
-# HANDOFF (2026-11-20, μετά το ASI01)
+# HANDOFF (2026-11-22)
+
+## ΤΩΡΑ (22/11): τι κάνει η επόμενη συζήτηση
+1. Τρέχει στο Kaggle (Save Version, notebook «22-11 ses 1 guard v2») ο guard v2: dev (runs/D: benign 2,4,11 none+guard2, επιθέσεις 5,6,7 guard2) και εξέταση (runs/DT: 3,8,13,14 guard2). Αναμένεται D.zip στο `kaggle sessions/`.
+2. Όταν έρθει: αποσυμπίεση σε scratchpad. Ανάλυση με `analyze_llm06.py` για runs/D και runs/DT. Σύγκριση με B.zip (none + 5 άμυνες, runs/B) και C.zip (guard v1, runs/CT και dev runs/C). Χρόνοι αποφάσεων από τις γραμμές `GUARD ... s v2` στα D_*.log, DT_*.log (v1: διάμεσος 11 s). Ψευδείς συναγερμοί: «επεισόδια με μπλοκαρισμένη κλήση» στα benign. Λόγοι BLOCK μέσα στα JSON (error που αρχίζει με «Blocked by policy (guard)»).
+3. Ενημέρωση docs/results_log.md (Π7) και αυτού του αρχείου.
+4. Συνάντηση με επιβλέποντα Τρίτη 24/11: παρουσίαση LLM06 + ASI01 + 5 άμυνες + guard v1/v2. Ερώτηση προς επιβλέποντα: σειρά μετά τη συνάντηση (πρόταση: LLM10 και ASI06 baseline/άμυνες πρώτα, μετά guard εξόδων (PromptArmor), μετά RAG).
+5. Μετά: guard εξόδων (θέση Α, υποκλάση PromptInjectionDetector), συνδυασμός Α+Β, LLM10/ASI06, RAG, επαναλήψεις.
 
 ## Θέμα (εγκρίθηκε 16/11/2026)
 Επέκταση AgentDojo (LLM06/ASI02, LLM10, ASI06) ως test set, μετά ενδιάμεσος agent που ελέγχει εξόδους εργαλείων και κλήσεις εργαλείων. Μέτρηση σε ASI01 και στις νέες κατηγορίες, με/χωρίς RAG, έναντι των έτοιμων αμυνών. Βλ. CLAUDE.md.
