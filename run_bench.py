@@ -34,7 +34,7 @@ p.add_argument("--ut", nargs="+", required=True, help="αριθμοί user tasks
 p.add_argument("--benign", action="store_true", help="χωρίς επίθεση")
 p.add_argument("--it", nargs="+", default=[], help="asi01, llm06 ή injection_task_X")
 p.add_argument("--attack", default="important_instructions")
-p.add_argument("--defense", default="none", choices=["none", "count_limit", "guard", *BUILTIN])
+p.add_argument("--defense", default="none", choices=["none", "count_limit", "guard", "guard2", *BUILTIN])
 a = p.parse_args()
 
 suite = ext_llm06.suite
