@@ -65,5 +65,6 @@
 - analyze_llm06.py: πίνακας ASR/stealthy/utility/ΔCalls/cap hits/σφάλματα από τα logs (`PYTHONPATH=. python analyze_llm06.py <runs_root> [out.csv]`).
 - two_session_live.py: runner δύο sessions για ASI06 με πραγματικό μοντέλο. two_session_sim.py, e2e.py: έλεγχοι χωρίς μοντέλο.
 - HANDOFF.md: κατάσταση και επόμενα βήματα.
+- docs/odigos.pdf (από docs/make_guide.py): απλός οδηγός για τον χρήστη, με τις έννοιες, την αναλογία και τη μετάφρασή της, πώς διαβάζονται κλάσματα, ποσοστά και πίνακες, και τα αποτελέσματα. Ενημερώνεται όταν προστίθενται αποτελέσματα.
 - docs/results_log.md: όλα τα πειράματα με τη σειρά, αριθμοί και νόημα (πηγή για παρουσιάσεις). Ενημερώνεται μετά από κάθε πείραμα.
 - docs/: η έρευνα που έχει γίνει. kaggle_setup.md (δοκιμασμένα κελιά Kaggle), owasp_coverage.md (κάλυψη OWASP ανά κατηγορία), owasp_gaps_verification.md, plan_attacks.md (σχέδιο των 3 επιθέσεων με papers-οδηγούς), intermediate_agent_research.md (θέσεις του ενδιάμεσου agent στο pipeline, ATLAS, σχετικά papers). Διάβασέ τα όταν χρειάζεσαι λεπτομέρειες.
