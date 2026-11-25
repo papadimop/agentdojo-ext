@@ -61,3 +61,59 @@ REP = "rep1"
 !PYTHONPATH=. python analyze_llm06.py /kaggle/working/runs /kaggle/working/llm06_{REP}.csv
 ```
 - Benign: ~15 λεπτά. 64 επεισόδια επίθεσης: 56-160 s το καθένα.
+
+## Παράλληλο τρέξιμο με Save Version (δοκιμασμένο 22/11, guard v2, D.zip: 102 επεισόδια, 0 σφάλματα)
+Πρότυπο για κάθε μεγάλο τρέξιμο. Νέο notebook, GPU T4 x2, Internet On. Γράφονται όλα τα κελιά ΧΩΡΙΣ να τρέξουν, μετά Save Version -> Save & Run All (Commit) -> Advanced: Run with GPU for this session. Αν άνοιξε interactive session: Stop Session. Όταν τελειώσει: κατέβασμα του zip, upload στο `kaggle sessions/`, και η έξοδος του τελευταίου κελιού στον Claude.
+
+```python
+# Κελί 1
+%cd /kaggle/working
+!git clone https://github.com/papadimop/agentdojo-ext.git
+%cd /kaggle/working/agentdojo-ext
+!git log --oneline -1
+```
+```python
+# Κελί 2: Ollama με 2 παράλληλα αιτήματα
+import os, shutil, subprocess, time
+if shutil.which("ollama") is None:
+    !apt-get update -qq > /dev/null 2>&1 && apt-get install -y -qq zstd pciutils > /dev/null 2>&1
+    !curl -fsSL https://ollama.com/install.sh | sh > /dev/null 2>&1
+ollama_env = dict(os.environ, OLLAMA_NUM_PARALLEL="2")
+ollama_proc = subprocess.Popen(["ollama", "serve"], env=ollama_env, stdout=open("/tmp/ollama.log", "w"), stderr=subprocess.STDOUT)
+time.sleep(10)
+!ollama --version
+```
+```python
+# Κελί 3
+!ollama pull qwen3:8b > /dev/null 2>&1
+!ollama run qwen3:8b "Reply with the single word OK" > /dev/null 2>&1
+!ollama ps
+```
+```python
+# Κελί 4
+!pip install -q agentdojo==0.1.35
+os.environ["LOCAL_LLM_PORT"] = "11434"
+os.environ["PYTHONPATH"] = "."
+W = "/kaggle/working"
+!python -m agentdojo.scripts.check_suites -v v1.2.2 -s banking -ml ext_llm06 --no-check-injectable
+```
+```python
+# Κελί 5: smoke test 1 επεισοδίου
+!python run_bench.py --logdir {W}/runs/smoke --ut 2 --benign --defense guard2 2>&1 | grep -v -i warn | tail -12
+```
+```python
+# Κελί 6: 2 διεργασίες με διαφορετικά user tasks στο ίδιο logdir (benign ΠΡΩΤΑ για κάθε user task/άμυνα: το χρειάζεται η μερική υπακοή)
+%%time
+!( python run_bench.py --logdir {W}/runs/DT --ut 3 13 --benign --defense guard2 && python run_bench.py --logdir {W}/runs/DT --ut 3 13 --it asi01 llm06 --defense guard2 ) > {W}/DT_A.log 2>&1 & ( python run_bench.py --logdir {W}/runs/DT --ut 8 14 --benign --defense guard2 && python run_bench.py --logdir {W}/runs/DT --ut 8 14 --it asi01 llm06 --defense guard2 ) > {W}/DT_B.log 2>&1 & wait
+!grep -h -E "επίθεσης=|benign utility|ΣΦΑΛΜΑ" {W}/DT_A.log {W}/DT_B.log
+```
+```python
+# Κελί 7: zip (πάντα πριν την ανάλυση)
+!cd {W} && zip -qr D.zip runs DT_A.log DT_B.log && ls -lh D.zip
+```
+```python
+# Κελί 8: αποτελέσματα
+!cat {W}/DT_A.log {W}/DT_B.log | grep -o "^GUARD [A-Za-z>-]*" | sort | uniq -c
+!python analyze_llm06.py {W}/runs/DT {W}/DT.csv
+```
+Χρόνος: ~0,6 λεπτά ανά επεισόδιο με 2 διεργασίες (φάση Β: 300 επεισόδια σε 3h05m). Επαναλήψεις σε χωριστά logdirs (runs/rep1, runs/rep2, ...): ο αναλυτής παίρνει την ετικέτα επανάληψης από τον φάκελο πριν από τον φάκελο του pipeline.
