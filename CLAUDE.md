@@ -64,6 +64,7 @@
 - Το JSON ενός επεισοδίου δημιουργείται όταν ΞΕΚΙΝΑ και ξαναγράφεται σε κάθε μήνυμα. utility/security μπαίνουν στο τέλος. Μισοτελειωμένο αρχείο ξανατρέχει (ValidationError στο load_task_results).
 - qwen3:8b ASI01 (important_instructions, user tasks 3,8,13,14): ASR 11/36 = 30.6%.
 - Φάση Β (qwen3:8b, user tasks 3,8,13,14): repeat_user_prompt ASI01 ASR 0/36 με utility 97%. pi_detector, tool_filter ASR 0% με utility ~61-67%. spotlighting χωρίς ουσιαστική επίδραση (10/36). Πλήρης πίνακας στο HANDOFF.
+- ΠΑΓΙΔΑ Kaggle/IPython (25/11, κόστισε ένα Save Version): σε γραμμή `!` που περιέχει `$` (π.χ. `$P` σε bash loop) το IPython ΔΕΝ αντικαθιστά τα `{var}`. Ποτέ `$` σε γραμμές `!`· loops σε Python (`for P in PARTS.split():` + `!cmd {P}`). ΚΑΘΕ κελί πριν δοθεί: εκτέλεση ολόκληρου του notebook με nbclient (πραγματικός kernel) με /kaggle/working ως symlink και ψεύτικο server στο 11434, όχι μόνο από bash.
 - Kaggle Save Version (Save & Run All, GPU for this session) τρέχει το notebook στο παρασκήνιο. Output + Logs στη σελίδα του notebook. Το interactive session σταματά χωριστά (Stop Session).
 - Guard v2 (qwen3:8b, think=false μέσω native /api/chat): διάμεσος 0.8 s/απόφαση (v1 με /no_think: 11 s). Εξέταση: ASI01 0/36, utility 91.7%, LLM06 exec 0/16.
 - Αναλυτής: η μερική υπακοή χρειάζεται benign του ΙΔΙΟΥ user task και ίδιας άμυνας στο ίδιο logdir, αλλιώς η κανονική κλήση μετρά ως επιπλέον.
