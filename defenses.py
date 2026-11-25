@@ -3,7 +3,8 @@
 - CountLimitExecutor: ο απλός κανόνας κώδικα. Ένα εργαλείο εκτελείται το πολύ LIMIT φορές
   ανά επεισόδιο. Οι επιπλέον κλήσεις ΔΕΝ εκτελούνται: επιστρέφεται μήνυμα σφάλματος στο μοντέλο,
   ώστε η συζήτηση να μένει έγκυρη (κάθε κλήση έχει απάντηση).
-- build_pipeline: pipeline για "none", τις 4 έτοιμες άμυνες του AgentDojo, το "count_limit" και το "guard" (guard.py).
+- build_pipeline: pipeline για "none", τις 4 έτοιμες άμυνες του AgentDojo, το "count_limit" (όριο 5),
+  το "count_limit1" (όριο 1, 25/11: σκληρότερος αντίπαλος για τον guard) και το "guard"/"guard2" (guard.py).
   Διορθώνει το tool_filter, που με VLLM_PARSED στέλνει ως όνομα μοντέλου το "vllm_parsed".
 """
 import os
@@ -20,6 +21,10 @@ from agentdojo.types import ChatMessage, ChatToolResultMessage, text_content_blo
 
 BUILTIN = ["tool_filter", "transformers_pi_detector", "spotlighting_with_delimiting", "repeat_user_prompt"]
 LIMIT = 5  # ίδιο με το BUDGET των επιθέσεων LLM06· ορίστηκε πριν τρέξει οποιαδήποτε άμυνα
+# Όριο ανά άμυνα-κανόνα. count_limit1: στο banking η ground truth καλεί κάθε εργαλείο το πολύ 1 φορά,
+# άρα είναι ο αυστηρότερος κανόνας που δεν χαλά (θεωρητικά) καμία εργασία. Ρυθμισμένος στο suite: δεν γενικεύει.
+COUNT_LIMITS = {"count_limit": LIMIT, "count_limit1": 1}
+OWN = ["none", *COUNT_LIMITS, "guard", "guard2"]
 
 
 class CountLimitExecutor(ToolsExecutor):
@@ -69,12 +74,13 @@ def build_pipeline(defense: str = "none", system_message: str | None = None):
     port = os.getenv("LOCAL_LLM_PORT", "8000")
     model_id = _get_local_model_id(port)
     cfg = PipelineConfig(llm="vllm_parsed", model_id=None,
-                         defense=None if defense in ("none", "count_limit", "guard", "guard2") else defense,
+                         defense=None if defense in OWN else defense,
                          system_message_name=None, system_message=system_message)
     pipeline = AgentPipeline.from_config(cfg)
-    if defense == "count_limit":
+    if defense in COUNT_LIMITS:
         system, init, llm, _loop = pipeline.elements
-        pipeline = AgentPipeline([system, init, llm, ToolsExecutionLoop([CountLimitExecutor(), llm])])
+        pipeline = AgentPipeline([system, init, llm,
+                                  ToolsExecutionLoop([CountLimitExecutor(limit=COUNT_LIMITS[defense]), llm])])
     if defense in ("guard", "guard2"):
         from guard import GuardExecutor  # ο ενδιάμεσος agent, με το ίδιο μοντέλο και client με τον agent
         system, init, llm, _loop = pipeline.elements

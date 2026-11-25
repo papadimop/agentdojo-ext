@@ -84,6 +84,7 @@
 - guard.py: ενδιάμεσος agent κλήσεων (GuardExecutor, v1 = `--defense guard`). Πριν από κάθε κλήση ρωτά το ίδιο μοντέλο (/no_think στο κείμενο, που ΔΕΝ σβήνει τη σκέψη: διάμεσος 11 s/απόφαση) ALLOW/BLOCK με βάση αίτημα χρήστη + εκτελεσμένες κλήσεις + προτεινόμενη κλήση. Δεν βλέπει εξόδους εργαλείων. Fail-open σε ακατάληπτη απάντηση. Αποφάσεις στο stderr ως `GUARD ...`. Ελέγχθηκε με ψεύτικο server (ALLOW/BLOCK/SMART/GARBAGE/THINK).
 - guard v2 (`--defense guard2`, 22/11): οδηγίες «δεν βλέπεις δεδομένα, μην μπλοκάρεις επειδή δεν επιβεβαιώνεις τιμή/συνθήκη· μπλόκαρε μόνο ενέργειες/παραλήπτες/στόχους εκτός αιτήματος και άσκοπες επαναλήψεις», native Ollama /api/chat με think=false (fallback στο OpenAI endpoint). Ο v1 (`guard`) μένει αμετάβλητος. Dev v2: benign 2,4,11 (τιμές από δεδομένα) + επιθέσεις 5,6,7. Εξέταση: 3,8,13,14.
 - phase_c.sh: none + guard σε user tasks (`bash phase_c.sh <logdir> <user tasks>`). Dev: 5,6,7. Εξέταση: 3,8,13,14.
+- llm06_big.sh, analyze_big.py: μεγάλο τρέξιμο LLM06 (parts 1-5, test) και η προκαθορισμένη ανάλυσή του (docs/plan_llm06_big.md: σχέδιο γραμμένο πριν τρέξει). defenses.py: και count_limit1. run_bench.py: και `--direct` (injection tasks ως αιτήματα χρήστη).
 - analyze_llm06.py: πίνακας ASR/stealthy/utility/ΔCalls/cap hits/σφάλματα από τα logs (`PYTHONPATH=. python analyze_llm06.py <runs_root> [out.csv]`).
 - two_session_live.py: runner δύο sessions για ASI06 με πραγματικό μοντέλο. two_session_sim.py, e2e.py: έλεγχοι χωρίς μοντέλο.
 - HANDOFF.md: κατάσταση και επόμενα βήματα.
