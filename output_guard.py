@@ -169,15 +169,27 @@ class OutputGuard(_ToolOutputFilter):
         if not injections:
             print(f"OGUARD CLEAN {time.time() - t0:.1f}s {tool}", file=sys.stderr, flush=True)
             return text
-        out, removed = text, []
+        # v1.1 (26/11, από τα logs του dev): πρώτα εντοπίζονται ΟΛΑ τα αποσπάσματα στο ΑΡΧΙΚΟ κείμενο, μετά ενώνονται όσα
+        # επικαλύπτονται, μετά σβήνονται. (v1: έσβηνε ένα-ένα· αν ένα απόσπασμα ήταν μέρος άλλου που είχε ήδη σβηστεί,
+        # «δεν βρισκόταν» και σβηνόταν όλη η έξοδος· 1 περίπτωση στο dev.) Οι οδηγίες του guard ΔΕΝ άλλαξαν.
+        spans = []
         for inj in injections:
-            span = locate(out, inj)
+            span = locate(text, inj)
             if span is None:
                 print(f"OGUARD DROPPED {time.time() - t0:.1f}s {tool} not-found: {inj[:100]!r}",
                       file=sys.stderr, flush=True)
                 return DROPPED_TEXT
-            removed.append(out[span[0]:span[1]])
-            out = out[:span[0]] + REMOVED_MARK + out[span[1]:]
+            spans.append(span)
+        merged = []
+        for a, b in sorted(spans):
+            if merged and a <= merged[-1][1]:
+                merged[-1] = (merged[-1][0], max(merged[-1][1], b))
+            else:
+                merged.append((a, b))
+        removed = [text[a:b] for a, b in merged]
+        out = text
+        for a, b in reversed(merged):
+            out = out[:a] + REMOVED_MARK + out[b:]
         snippet = " | ".join(r.replace("\n", " ")[:100] for r in removed)
         print(f"OGUARD REMOVED {time.time() - t0:.1f}s {tool} {sum(map(len, removed))}ch: {snippet!r}",
               file=sys.stderr, flush=True)
