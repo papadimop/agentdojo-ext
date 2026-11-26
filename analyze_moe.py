@@ -9,9 +9,12 @@ from statistics import mean, median
 root = sys.argv[1]
 REF_8B = {0, 3, 5, 6, 7, 8, 13, 14}  # qwen3:8b benign banking (επαληθευμένο 6/11, CLAUDE.md)
 for d in sorted(os.listdir(root)):
-    rows = []
+    rows, partial = [], []
     for p in glob.glob(f"{root}/{d}/banking/user_task_*/none/none.json"):
         j = json.load(open(p))
+        if "utility" not in j:  # κομμένο επεισόδιο (π.χ. όριο χρόνου): δεν μετράει, αναφέρεται
+            partial.append(j["user_task_id"])
+            continue
         msgs = j["messages"]
         rows.append({"u": int(j["user_task_id"].rsplit("_", 1)[1]), "util": bool(j["utility"]),
                      "err": j.get("error") is not None, "dur": j.get("duration") or 0,
@@ -24,5 +27,5 @@ for d in sorted(os.listdir(root)):
     print(f"[{d}] επεισόδια {len(rows)} | utility {len(solved)}/{len(rows)} | σφάλματα {sum(r['err'] for r in rows)} | "
           f"διάρκεια μέση {mean(r['dur'] for r in rows):.0f}s διάμεση {median(r['dur'] for r in rows):.0f}s max {max(r['dur'] for r in rows):.0f}s | "
           f"κλήσεις εργαλείων μέσο {mean(r['calls'] for r in rows):.1f} | επεισόδια με μπλοκάρισμα {sum(r['blocked'] > 0 for r in rows)}")
-    print(f"    λύνει: {sorted(solved)}")
+    print(f"    λύνει: {sorted(solved)}" + (f" | ΜΙΣΟΤΕΛΕΙΩΜΕΝΑ (δεν μετρούν): {sorted(partial)}" if partial else ""))
     print(f"    σε σχέση με qwen3:8b {sorted(REF_8B)}: επιπλέον {sorted(solved - REF_8B)}, χάνει {sorted(REF_8B - solved)}")
