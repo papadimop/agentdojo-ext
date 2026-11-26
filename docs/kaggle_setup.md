@@ -117,3 +117,15 @@ W = "/kaggle/working"
 !python analyze_llm06.py {W}/runs/DT {W}/DT.csv
 ```
 Χρόνος: ~0,6 λεπτά ανά επεισόδιο με 2 διεργασίες (φάση Β: 300 επεισόδια σε 3h05m). Επαναλήψεις σε χωριστά logdirs (runs/rep1, runs/rep2, ...): ο αναλυτής παίρνει την ετικέτα επανάληψης από τον φάκελο πριν από τον φάκελο του pipeline.
+
+## Μεγάλο τρέξιμο LLM06 (25/11, docs/plan_llm06_big.md)
+Ίδια κελιά 1-4 με το πρότυπο παραπάνω (+ `!python -c "import scipy; print('scipy', scipy.__version__)"` στο 4). Κελί 6, ελεγμένο με nbclient (πραγματικός kernel):
+```python
+%%time
+PARTS = "1"
+for P in PARTS.split():
+    !bash llm06_big.sh {W}/runs/big {P}
+!grep -h -E "επίθεσης=|utility=|ΣΦΑΛΜΑ" {W}/runs/big.P*_*.log | sort | uniq -c | sort -rn | head -5
+!grep -h -c "ΣΦΑΛΜΑ" {W}/runs/big.P*_*.log
+```
+ΠΡΟΣΟΧΗ: η πρώτη εκδοχή είχε `!for P in {PARTS}; do bash ... $P; done` και δεν έτρεξε τίποτα (με `$` στη γραμμή το IPython δεν αντικαθιστά τα `{}`). Ποτέ `$` σε γραμμές `!`.

@@ -15,7 +15,7 @@
 Πρόγραμμα έως την επόμενη συνάντηση (~9/12, GPU ~20 από 60 ώρες):
 - Εβδομάδα 1:
   - Μέρες 1-2: συμπλήρωση threat model (slack/workspace).
-  - Μέρα 2: ΕΓΙΝΕ 25/11: σχέδιο στο docs/plan_llm06_big.md (μέτρα, ομάδες, ρυθμίσεις, H1-H4 με Bonferroni, power, ώρες), κώδικας llm06_big.sh + analyze_big.py + count_limit1 + `run_bench.py --direct`, ελεγμένα με ψεύτικο server. Επόμενο: Kaggle parts 1 -> 3 -> 2 -> 4+5 (~14-15 ώρες).
+  - Μέρα 2: ΕΓΙΝΕ 25/11: σχέδιο στο docs/plan_llm06_big.md (μέτρα, ομάδες, ρυθμίσεις, H1-H4 με Bonferroni, power, ώρες), κώδικας llm06_big.sh + analyze_big.py + count_limit1 + `run_bench.py --direct`, ελεγμένα με ψεύτικο server. Kaggle: part 1 ΕΓΙΝΕ 25/11 (2h31m, 0 σφάλματα, προκαταρκτικά στο results_log Π9). Part 3 ΕΓΙΝΕ 26/11 (2h39m, 0 σφάλματα, Π9). Επόμενα: part 2 -> 4 5 (ίδιο notebook, αλλάζει μόνο το PARTS στο κελί 6).
   - Μέρες 3-5: Kaggle (Save Version σε 2-3 κομμάτια, ~13-15 ώρες GPU). 13 εργασίες (όλες εκτός 5,6,7 για τον guard· ή 16 με χωριστή αναφορά) x 4 LLM06 x 4 επαναλήψεις + benign ανά επανάληψη. Ρυθμίσεις: none, guard2, count_limit(5), count_limit(1) [νέο, σκληρότερος αντίπαλος], repeat_user_prompt. Και απευθείας αιτήματα (injection tasks ως user tasks) με guard2: ο guard πρέπει να ΕΠΙΤΡΕΨΕΙ επαναλήψεις που ζητά ο χρήστης.
   - Μέρες 6-7: ανάλυση με Fisher παντού.
 - Εβδομάδα 2:
