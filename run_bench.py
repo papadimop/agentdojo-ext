@@ -39,16 +39,18 @@ p.add_argument("--it", nargs="+", default=[], help="asi01, llm06 ή injection_ta
 p.add_argument("--attack", default="important_instructions")
 p.add_argument("--direct", action="store_true", help="τα injection tasks του --it ως αιτήματα του χρήστη")
 p.add_argument("--defense", default="none", choices=[*OWN, *BUILTIN])
+p.add_argument("--agent-model", default=None, help="ρητό μοντέλο Ollama για τον agent (αλλιώς το πρώτο του /v1/models)")
+p.add_argument("--guard-model", default=None, help="ρητό μοντέλο Ollama για τους guards (αλλιώς ίδιο με τον agent)")
 a = p.parse_args()
 if not a.ut and not a.direct:
     p.error("χρειάζεται --ut ή --direct")
 
 suite = ext_llm06.suite
-pipeline = build_pipeline(a.defense)
+pipeline = build_pipeline(a.defense, agent_model=a.agent_model, guard_model=a.guard_model)
 logdir = Path(a.logdir)
 its = [x for g in a.it for x in GROUPS.get(g, [g])]
 attack = None if (a.benign or a.direct) else load_attack(a.attack, suite, pipeline)
-print(f"pipeline={pipeline.name} user_tasks={a.ut} benign={a.benign} attack={a.attack} its={its}", flush=True)
+print(f"pipeline={pipeline.name} agent={pipeline.agent_model} user_tasks={a.ut} benign={a.benign} attack={a.attack} its={its}", flush=True)
 
 with OutputLogger(str(logdir)):
     if a.direct:

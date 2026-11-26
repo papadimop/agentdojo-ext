@@ -14,7 +14,7 @@ from collections.abc import Sequence
 from agentdojo.agent_pipeline.agent_pipeline import AgentPipeline, PipelineConfig, _get_local_model_id
 from agentdojo.agent_pipeline.basic_elements import InitQuery, SystemMessage
 from agentdojo.agent_pipeline.llms.google_llm import EMPTY_FUNCTION_NAME
-from agentdojo.agent_pipeline.llms.openai_llm import OpenAILLMToolFilter
+from agentdojo.agent_pipeline.llms.openai_llm import OpenAILLM, OpenAILLMToolFilter
 from agentdojo.agent_pipeline.tool_execution import ToolsExecutionLoop, ToolsExecutor, is_string_list
 from agentdojo.functions_runtime import EmptyEnv, Env, FunctionsRuntime
 from agentdojo.types import ChatMessage, ChatToolResultMessage, text_content_block_from_string
@@ -71,13 +71,21 @@ class CountLimitExecutor(ToolsExecutor):
         return query, runtime, env, [*messages, *results], extra_args
 
 
-def build_pipeline(defense: str = "none", system_message: str | None = None):
+def build_pipeline(defense: str = "none", system_message: str | None = None,
+                   agent_model: str | None = None, guard_model: str | None = None):
+    """agent_model / guard_model (27/11): ρητά ονόματα μοντέλων Ollama για agent και guards (π.χ. agent MoE, guard qwen3:8b).
+    Αν λείπουν: το πρώτο μοντέλο του /v1/models (όπως ως τώρα)."""
     port = os.getenv("LOCAL_LLM_PORT", "8000")
-    model_id = _get_local_model_id(port)
+    model_id = _get_local_model_id(port) if not (agent_model and guard_model) else agent_model
+    agent_model = agent_model or model_id
+    guard_model = guard_model or model_id
     cfg = PipelineConfig(llm="vllm_parsed", model_id=None,
                          defense=None if defense in OWN else defense,
                          system_message_name=None, system_message=system_message)
     pipeline = AgentPipeline.from_config(cfg)
+    for el in pipeline.elements:  # ο agent (OpenAILLM): ρητό μοντέλο αντί για «το πρώτο της λίστας»
+        if type(el) is OpenAILLM:
+            el.model = agent_model
     if defense in COUNT_LIMITS:
         system, init, llm, _loop = pipeline.elements
         pipeline = AgentPipeline([system, init, llm,
@@ -85,7 +93,7 @@ def build_pipeline(defense: str = "none", system_message: str | None = None):
     if defense in ("guard", "guard2"):
         from guard import GuardExecutor  # ο ενδιάμεσος agent, με το ίδιο μοντέλο και client με τον agent
         system, init, llm, _loop = pipeline.elements
-        guard_exec = GuardExecutor(client=llm.client, model=model_id, version=2 if defense == "guard2" else 1,
+        guard_exec = GuardExecutor(client=llm.client, model=guard_model, version=2 if defense == "guard2" else 1,
                                    ollama_url=f"http://localhost:{port}")
         pipeline = AgentPipeline([system, init, llm, ToolsExecutionLoop([guard_exec, llm])])
     if defense in OUTPUT:
@@ -95,18 +103,19 @@ def build_pipeline(defense: str = "none", system_message: str | None = None):
         if defense == "oguard_regex":
             out_filter = RegexOutputFilter()
         else:
-            out_filter = OutputGuard(client=llm.client, model=model_id, ollama_url=f"http://localhost:{port}")
+            out_filter = OutputGuard(client=llm.client, model=guard_model, ollama_url=f"http://localhost:{port}")
         if defense == "guard2_oguard":
             from guard import GuardExecutor
-            executor = GuardExecutor(client=llm.client, model=model_id, version=2, ollama_url=f"http://localhost:{port}")
+            executor = GuardExecutor(client=llm.client, model=guard_model, version=2, ollama_url=f"http://localhost:{port}")
         else:
             executor = ToolsExecutor()
         pipeline = AgentPipeline([system, init, llm, ToolsExecutionLoop([executor, out_filter, llm])])
     if defense == "tool_filter":
         for el in pipeline.elements:
             if isinstance(el, OpenAILLMToolFilter):
-                el.model = model_id  # αλλιώς στέλνει model="vllm_parsed", που δεν υπάρχει στο Ollama
+                el.model = agent_model  # αλλιώς στέλνει model="vllm_parsed", που δεν υπάρχει στο Ollama
     # Το όνομα πρέπει να περιέχει "vllm_parsed" (το χρειάζεται το important_instructions) και
     # ορίζει τον φάκελο των logs: <logdir>/<name>/banking/...
     pipeline.name = "vllm_parsed" if defense == "none" else f"vllm_parsed-{defense}"
+    pipeline.agent_model = agent_model
     return pipeline
