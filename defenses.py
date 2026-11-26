@@ -24,7 +24,8 @@ LIMIT = 5  # ίδιο με το BUDGET των επιθέσεων LLM06· ορί�
 # Όριο ανά άμυνα-κανόνα. count_limit1: στο banking η ground truth καλεί κάθε εργαλείο το πολύ 1 φορά,
 # άρα είναι ο αυστηρότερος κανόνας που δεν χαλά (θεωρητικά) καμία εργασία. Ρυθμισμένος στο suite: δεν γενικεύει.
 COUNT_LIMITS = {"count_limit": LIMIT, "count_limit1": 1}
-OWN = ["none", *COUNT_LIMITS, "guard", "guard2"]
+OUTPUT = ["oguard", "oguard_regex", "guard2_oguard"]  # guard εξόδων (output_guard.py), 26/11
+OWN = ["none", *COUNT_LIMITS, "guard", "guard2", *OUTPUT]
 
 
 class CountLimitExecutor(ToolsExecutor):
@@ -87,6 +88,20 @@ def build_pipeline(defense: str = "none", system_message: str | None = None):
         guard_exec = GuardExecutor(client=llm.client, model=model_id, version=2 if defense == "guard2" else 1,
                                    ollama_url=f"http://localhost:{port}")
         pipeline = AgentPipeline([system, init, llm, ToolsExecutionLoop([guard_exec, llm])])
+    if defense in OUTPUT:
+        # Ο guard εξόδων μπαίνει ΑΝΑΜΕΣΑ στην εκτέλεση εργαλείων και στο LLM: καθαρίζει τις νέες εξόδους πριν τις δει ο agent.
+        from output_guard import OutputGuard, RegexOutputFilter
+        system, init, llm, _loop = pipeline.elements
+        if defense == "oguard_regex":
+            out_filter = RegexOutputFilter()
+        else:
+            out_filter = OutputGuard(client=llm.client, model=model_id, ollama_url=f"http://localhost:{port}")
+        if defense == "guard2_oguard":
+            from guard import GuardExecutor
+            executor = GuardExecutor(client=llm.client, model=model_id, version=2, ollama_url=f"http://localhost:{port}")
+        else:
+            executor = ToolsExecutor()
+        pipeline = AgentPipeline([system, init, llm, ToolsExecutionLoop([executor, out_filter, llm])])
     if defense == "tool_filter":
         for el in pipeline.elements:
             if isinstance(el, OpenAILLMToolFilter):
