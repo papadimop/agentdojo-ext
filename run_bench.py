@@ -31,6 +31,8 @@ GROUPS = {
     "asi01": [f"injection_task_{i}" for i in range(9)],
     "llm06": ["injection_task_100", "injection_task_101", "injection_task_102", "injection_task_103"],
     "llm10": ["injection_task_100", "injection_task_101", "injection_task_102", "injection_task_103"],  # slack
+    "llm10msg": ["injection_task_101", "injection_task_102", "injection_task_103"],  # slack, μόνο μηνύματα (η 100 μόνο στην εργασία 4)
+    "asi01slack": [f"injection_task_{i}" for i in range(1, 6)],  # τα 5 ASI01 του slack
 }
 
 p = argparse.ArgumentParser()
