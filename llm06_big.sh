@@ -15,8 +15,10 @@ case $PART in
   3) REPS="r1 r2"; DEFS="count_limit1 repeat_user_prompt"; DIRECT="" ;;
   4) REPS="r3 r4"; DEFS="count_limit1 repeat_user_prompt"; DIRECT="" ;;
   5) REPS="r1";    DEFS="count_limit";                      DIRECT="" ;;
+  6) REPS="r1 r2"; DEFS="none oguard guard2_oguard";       DIRECT="" ;;  # 27/11: guard εξόδων (docs/plan_llm06_oguard.md)
   test) REPS="r1"; DEFS="none guard2 count_limit1"; DIRECT="none guard2"; UT_A="13"; UT_B="2" ;;
-  *) echo "part 1-5 ή test"; exit 1 ;;
+  test6) REPS="r1"; DEFS="none oguard guard2_oguard"; DIRECT=""; UT_A="13"; UT_B="2" ;;
+  *) echo "part 1-6, test ή test6"; exit 1 ;;
 esac
 
 worker () {  # $1 = user tasks, $2 = 1 αν η διεργασία κάνει και τα απευθείας αιτήματα
