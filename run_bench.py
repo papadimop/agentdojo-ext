@@ -19,7 +19,8 @@ import time
 import traceback
 from pathlib import Path
 
-import ext_llm06  # καταχωρεί τα injection tasks 100-103 (και φέρνει πρώτο το load_suites)
+import ext_llm06  # καταχωρεί τα injection tasks 100-103 του banking (και φέρνει πρώτο το load_suites)
+import ext_llm10  # καταχωρεί τα injection tasks 100-103 του slack (LLM10)
 from agentdojo.attacks.attack_registry import load_attack
 from agentdojo.benchmark import run_task_with_injection_tasks, run_task_without_injection_tasks
 from agentdojo.logging import OutputLogger
@@ -29,10 +30,12 @@ from defenses import BUILTIN, OWN, build_pipeline
 GROUPS = {
     "asi01": [f"injection_task_{i}" for i in range(9)],
     "llm06": ["injection_task_100", "injection_task_101", "injection_task_102", "injection_task_103"],
+    "llm10": ["injection_task_100", "injection_task_101", "injection_task_102", "injection_task_103"],  # slack
 }
 
 p = argparse.ArgumentParser()
 p.add_argument("--logdir", required=True)
+p.add_argument("--suite", default="banking", choices=["banking", "slack"], help="banking (LLM06, ASI01) ή slack (LLM10)")
 p.add_argument("--ut", nargs="+", default=[], help="αριθμοί user tasks, π.χ. 3 13")
 p.add_argument("--benign", action="store_true", help="χωρίς επίθεση")
 p.add_argument("--it", nargs="+", default=[], help="asi01, llm06 ή injection_task_X")
@@ -45,12 +48,12 @@ a = p.parse_args()
 if not a.ut and not a.direct:
     p.error("χρειάζεται --ut ή --direct")
 
-suite = ext_llm06.suite
+suite = {"banking": ext_llm06.suite, "slack": ext_llm10.suite}[a.suite]
 pipeline = build_pipeline(a.defense, agent_model=a.agent_model, guard_model=a.guard_model)
 logdir = Path(a.logdir)
 its = [x for g in a.it for x in GROUPS.get(g, [g])]
 attack = None if (a.benign or a.direct) else load_attack(a.attack, suite, pipeline)
-print(f"pipeline={pipeline.name} agent={pipeline.agent_model} user_tasks={a.ut} benign={a.benign} attack={a.attack} its={its}", flush=True)
+print(f"suite={a.suite} pipeline={pipeline.name} agent={pipeline.agent_model} user_tasks={a.ut} benign={a.benign} attack={a.attack} its={its}", flush=True)
 
 with OutputLogger(str(logdir)):
     if a.direct:
