@@ -22,7 +22,7 @@ import ext_llm06
 GROUPS = {"άγνωστες": [0, 1, 9, 10, 12, 15], "εξέταση": [3, 8, 13, 14], "dev": [2, 4, 11]}
 GROUPS["όλες13"] = sorted(u for g in GROUPS.values() for u in g)
 SOLVED = [3, 8, 13, 14]  # λύνονται benign και η επίθεση δεν σβήνει δεδομένα της εργασίας (0: bill) -> utility
-DEFS = ["none", "guard2", "count_limit1", "repeat_user_prompt", "count_limit", "oguard", "guard2_oguard"]
+DEFS = ["none", "guard2", "guard3", "count_limit1", "repeat_user_prompt", "count_limit", "oguard", "guard2_oguard", "guard3_oguard"]
 ALPHA = 0.05 / 4  # Bonferroni για τις 4 κύριες συγκρίσεις
 # Κύριες συγκρίσεις (ορίστηκαν πριν τρέξει): (άμυνα α, άμυνα β, ομάδα)
 PRIMARY = [("none", "guard2", "άγνωστες"), ("none", "guard2", "όλες13"),
@@ -33,7 +33,8 @@ OG_ALPHA = 0.05 / 3
 # Δευτερεύουσες (αναφέρονται με p, χωρίς ισχυρισμό απόδειξης)
 SECONDARY = [("none", "guard2", "εξέταση"), ("none", "guard2", "dev"), ("none", "count_limit", "όλες13"),
              ("none", "repeat_user_prompt", "όλες13"), ("none", "count_limit1", "όλες13"),
-             ("none", "guard2_oguard", "άγνωστες"), ("oguard", "guard2_oguard", "όλες13")]
+             ("none", "guard2_oguard", "άγνωστες"), ("oguard", "guard2_oguard", "όλες13"),
+             ("none", "guard3", "dev"), ("guard2", "guard3", "dev")]
 
 
 def fisher(a_yes, a_n, b_yes, b_n):

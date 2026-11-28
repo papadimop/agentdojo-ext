@@ -26,8 +26,9 @@ LIMIT = 5  # ίδιο με το BUDGET των επιθέσεων LLM06· ορί�
 # Όριο ανά άμυνα-κανόνα. count_limit1: στο banking η ground truth καλεί κάθε εργαλείο το πολύ 1 φορά,
 # άρα είναι ο αυστηρότερος κανόνας που δεν χαλά (θεωρητικά) καμία εργασία. Ρυθμισμένος στο suite: δεν γενικεύει.
 COUNT_LIMITS = {"count_limit": LIMIT, "count_limit1": 1}
-OUTPUT = ["oguard", "oguard_regex", "guard2_oguard"]  # guard εξόδων (output_guard.py), 26/11
-OWN = ["none", *COUNT_LIMITS, "guard", "guard2", *OUTPUT, "sanitize"]
+OUTPUT = ["oguard", "oguard_regex", "guard2_oguard", "guard3_oguard"]  # guard εξόδων (output_guard.py), 26/11
+OWN = ["none", *COUNT_LIMITS, "guard", "guard2", "guard3", *OUTPUT, "sanitize"]
+GUARD_VERSION = {"guard": 1, "guard2": 2, "guard3": 3, "guard2_oguard": 2, "guard3_oguard": 3}
 
 
 class CountLimitExecutor(ToolsExecutor):
@@ -127,10 +128,10 @@ def build_pipeline(defense: str = "none", system_message: str | None = None,
         system, init, llm, _loop = pipeline.elements
         pipeline = AgentPipeline([system, init, llm,
                                   ToolsExecutionLoop([CountLimitExecutor(limit=COUNT_LIMITS[defense]), llm])])
-    if defense in ("guard", "guard2"):
+    if defense in ("guard", "guard2", "guard3"):
         from guard import GuardExecutor  # ο ενδιάμεσος agent, με το ίδιο μοντέλο και client με τον agent
         system, init, llm, _loop = pipeline.elements
-        guard_exec = GuardExecutor(client=llm.client, model=guard_model, version=2 if defense == "guard2" else 1,
+        guard_exec = GuardExecutor(client=llm.client, model=guard_model, version=GUARD_VERSION[defense],
                                    ollama_url=f"http://localhost:{port}")
         pipeline = AgentPipeline([system, init, llm, ToolsExecutionLoop([guard_exec, llm])])
     if defense == "sanitize":
@@ -144,9 +145,10 @@ def build_pipeline(defense: str = "none", system_message: str | None = None,
             out_filter = RegexOutputFilter()
         else:
             out_filter = OutputGuard(client=llm.client, model=guard_model, ollama_url=f"http://localhost:{port}")
-        if defense == "guard2_oguard":
+        if defense in ("guard2_oguard", "guard3_oguard"):
             from guard import GuardExecutor
-            executor = GuardExecutor(client=llm.client, model=guard_model, version=2, ollama_url=f"http://localhost:{port}")
+            executor = GuardExecutor(client=llm.client, model=guard_model, version=GUARD_VERSION[defense],
+                                     ollama_url=f"http://localhost:{port}")
         else:
             executor = ToolsExecutor()
         pipeline = AgentPipeline([system, init, llm, ToolsExecutionLoop([executor, out_filter, llm])])
