@@ -67,7 +67,7 @@ def main(root):
     from scipy.stats import fisher_exact
     rows = load(root)
     print(f"Επεισόδια: {len(rows)}, σφάλματα: {sum(r['error'] for r in rows)}")
-    defs = [d for d in ["none", "oguard", "guard2", "guard2_oguard", "sanitize", "repeat_user_prompt"] if any(r["defense"] == d for r in rows)]
+    defs = [d for d in ["none", "oguard", "guard2", "guard2_oguard", "guard3", "guard3_oguard", "sanitize", "repeat_user_prompt"] if any(r["defense"] == d for r in rows)]
     print("\n1. Ανά άμυνα και είδος επίθεσης (σε πόσα επεισόδια):")
     base = {}
     for fam in ("LLM10", "ASI01"):
